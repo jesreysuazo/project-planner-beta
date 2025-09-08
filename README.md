@@ -8,9 +8,9 @@ A simple spring boot project to manage project scheduling.
 - automatically calculates project duration and sort tasks based on dependencies
 
 ## Tech Stack
-Backend: Java 17 Spring boot 3
-Database: H2/ Mysql / PostgreSQL (can configure in application.properties)
-Api Testing: Postman (sample request included in '/docs')
+- Backend: Java 17 Spring boot 3
+- Database: H2/ Mysql / PostgreSQL (can configure in application.properties)
+- Api Testing: Postman (sample request included in '/docs')
 
 ## Build and Run
 ./mvnw clean install
