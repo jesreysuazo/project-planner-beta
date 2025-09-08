@@ -67,7 +67,7 @@ public class TaskService {
 
         // check if dependency is DONE
         if(updatedTask.getStatus() == TaskStatus.IN_PROGRESS || updatedTask.getStatus() == TaskStatus.DONE){
-            if(existingRecord.getDependencies()!= null && !existingRecord.getDependencies().isEmpty()) {
+            if(updatedTask.getDependencies()!= null && !updatedTask.getDependencies().isEmpty()) {
                 for(Task dep: existingRecord.getDependencies()){
                     System.out.println("dependency id: "+ dep.getId() +",dependency status: "+dep.getStatus());
 
@@ -237,3 +237,4 @@ public class TaskService {
         result.add(task);
     }
 }
+
