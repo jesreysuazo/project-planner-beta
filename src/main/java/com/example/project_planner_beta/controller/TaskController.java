@@ -39,22 +39,17 @@ public class TaskController {
         task.setStartDate(request.getStartDate());
         task.setEndDate(request.getEndDate());
 
+        Set<Long> dependencyIds = request.getDependencyIds() !=null
+                ? new HashSet<>(request.getDependencyIds())
+                :Collections.emptySet();
+        if(!dependencyIds.isEmpty()){
+            List<Task> dependencies = taskRepository.findAllById(dependencyIds);
+            task.setDependencies(new HashSet<>(dependencies));
+        }
+
+
         Task createdTask = taskService.createTask(task);
         System.out.println("Task saved. Generated ID:" + createdTask.getId());
-
-
-        if(request.getDependencyIds() != null && !request.getDependencyIds().isEmpty()){
-
-            System.out.println("Fetching dep from DB:" + request.getDependencyIds());
-            List<Task> dependencies = taskRepository.findAllById(request.getDependencyIds());
-            System.out.println("Fetched:" + dependencies.size() + "dependencies");
-            dependencies.forEach(dep -> System.out.println("-Found dep: ID" + dep.getId()));
-
-            createdTask.setDependencies(new HashSet<>(dependencies));
-            createdTask = taskRepository.save(createdTask);
-
-            System.out.println("dependencies added");
-        }
 
         return ResponseEntity.ok(TaskMapper.toDTO(createdTask));
     }
@@ -71,16 +66,12 @@ public class TaskController {
         savedtask.setEndDate(updatedTask.getEndDate());
         savedtask.setStatus(updatedTask.getStatus());
 
-        if(updatedTask.getDependencyIds() != null && !updatedTask.getDependencyIds().isEmpty()){
-
-            System.out.println("Fetching dep from DB:" + updatedTask.getDependencyIds());
-            List<Task> dependencies = taskRepository.findAllById(updatedTask.getDependencyIds());
-            System.out.println("Fetched:" + dependencies.size() + "dependencies");
-            dependencies.forEach(dep -> System.out.println("-Found dep: ID" + dep.getId()));
-
+        Set<Long> dependencyIds = updatedTask.getDependencyIds() !=null
+                ? new HashSet<>(updatedTask.getDependencyIds())
+                :Collections.emptySet();
+        if(!dependencyIds.isEmpty()){
+            List<Task> dependencies = taskRepository.findAllById(dependencyIds);
             savedtask.setDependencies(new HashSet<>(dependencies));
-
-            System.out.println("dependencies added");
         }
 
         Task saved = taskService.updateTask(id, savedtask);

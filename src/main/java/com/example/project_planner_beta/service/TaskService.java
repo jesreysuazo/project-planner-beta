@@ -37,9 +37,12 @@ public class TaskService {
         task.setProject(project);
         task.setStatus(TaskStatus.NOT_STARTED); // default status
 
-        if (task.getDependencies() != null && !task.getDependencies().isEmpty()) {
-            for (Task dep : task.getDependencies()) {
+        Task savedTask = taskRepository.save(task);
+        System.out.println("Saved task id: " + savedTask.getId());
+        if(savedTask.getDependencies() != null && !savedTask.getDependencies().isEmpty()){
 
+            Set<Task> dependencies = savedTask.getDependencies();
+            for (Task dep: dependencies){
                 if (!task.getProjectCode().equals(dep.getProjectCode())) {
                     throw new BadRequestException("All dependencies must belong to the same project");
                 }
@@ -49,16 +52,10 @@ public class TaskService {
             }
         }
 
-        Task savedTask = taskRepository.save(task);
-
-        if(task.getDependencies() != null && !task.getDependencies().isEmpty()){
-            savedTask.setDependencies(task.getDependencies());
-            savedTask = taskRepository.save(savedTask);
-        }
-
         return savedTask;
     }
 
+    @Transactional
     public Task updateTask(Long taskId, Task updatedTask) {
         Task existingRecord = taskRepository.findById(taskId)
                 .orElseThrow(() -> new BadRequestException("Task not found"));
@@ -93,6 +90,7 @@ public class TaskService {
 
         if (updatedTask.getDependencies() != null && !updatedTask.getDependencies().isEmpty()) {
             for (Task dep : updatedTask.getDependencies()) {
+                System.out.println("Adding dependency id: " + dep.getId() + ", with project code of: "+  dep.getProjectCode());
                 if (!updatedTask.getProjectCode().equals(dep.getProjectCode())) {
                     throw new BadRequestException("All dependencies must belong to the same project");
                 }
@@ -102,13 +100,9 @@ public class TaskService {
             }
         }
 
-        // Replace dependencies safely
-        existingRecord.getDependencies().clear();
-        if (updatedTask.getDependencies() != null) {
-            existingRecord.getDependencies().addAll(updatedTask.getDependencies());
-        }
+        Task savedTask = taskRepository.save(existingRecord);
 
-        return taskRepository.save(existingRecord);
+        return savedTask;
     }
 
     public List<Task> getTasksByProjectCode(String code){

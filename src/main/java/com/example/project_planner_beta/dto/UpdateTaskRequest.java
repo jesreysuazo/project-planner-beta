@@ -13,7 +13,6 @@ public class UpdateTaskRequest {
     private List<Long> dependencyIds;
 
     //getters setters
-
     public String getName() {return name;}
     public void setName(String name) {this.name = name;}
 
