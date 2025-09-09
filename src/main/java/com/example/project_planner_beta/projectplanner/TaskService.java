@@ -92,6 +92,10 @@ public class TaskService {
                     throw new BadRequestException("This action will result in a circular dependency");
                 }
             }
+
+            existingRecord.setDependencies(updatedTask.getDependencies());
+        } else {
+            existingRecord.setDependencies(updatedTask.getDependencies());
         }
 
         Task savedTask = taskRepository.save(existingRecord);
@@ -134,7 +138,7 @@ public class TaskService {
     }
 
     private boolean isDependentOn(Task current, Long targetId, Set<Long> visited){
-        System.out.println("LOOP CHECKER -- TASK ID: " + targetId + ",DEPENDENT ID" + current.getId() );
+        System.out.println("LOOP CHECKER -- TASK ID: " + targetId + ",DEPENDENT ID: " + current.getId() );
         if(current.getId().equals(targetId)){
             return true;
         }
