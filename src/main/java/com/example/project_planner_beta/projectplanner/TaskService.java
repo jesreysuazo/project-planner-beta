@@ -393,4 +393,14 @@ public class TaskService {
         }
     }
 
+    /**
+     * Check if IDs added on dependency are invalid
+     * @param dependency
+     */
+    public void dependencyIdChecker (Set<Long> dependency){
+        for(Long id: dependency){
+            getTaskDetails(id).orElseThrow(() -> new BadRequestException("Cannot add dependency. ID=" + id + " is invalid"));
+        }
+    }
+
 }

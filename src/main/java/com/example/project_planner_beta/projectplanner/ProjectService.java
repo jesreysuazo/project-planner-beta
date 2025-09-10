@@ -1,5 +1,6 @@
 package com.example.project_planner_beta.projectplanner;
 
+import com.example.project_planner_beta.common.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -77,7 +78,9 @@ public class ProjectService {
      * @param id project id
      */
     public void deleteProject(Long id) {
-        projectRepository.deleteById(id);
+        log.info("Deleting Project ID: "+ id);
+        Project project = projectRepository.findById(id).orElseThrow(() -> new BadRequestException("Project not found."));
+        projectRepository.deleteById(project.getId());
     }
 
     /**

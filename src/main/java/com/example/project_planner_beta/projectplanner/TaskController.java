@@ -57,6 +57,8 @@ public class TaskController {
                 ? new HashSet<>(request.getDependencyIds())
                 :Collections.emptySet();
         if(!dependencyIds.isEmpty()){
+            // checks if ids are valid on adding dependency
+            taskService.dependencyIdChecker(dependencyIds);
             List<Task> dependencies = taskRepository.findAllById(dependencyIds);
             task.setDependencies(new HashSet<>(dependencies));
         }
@@ -83,7 +85,7 @@ public class TaskController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id,@RequestBody UpdateTaskRequestDTO updatedTask){
-        Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> new BadRequestException("Cannot find ID"));
+        Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> new BadRequestException("Update failed. Invalid ID provided"));
 
         Task savedtask = new Task();
 
@@ -97,6 +99,8 @@ public class TaskController {
                 ? new HashSet<>(updatedTask.getDependencyIds())
                 :Collections.emptySet();
         if(!dependencyIds.isEmpty()){
+            // checks if ids are valid on adding dependency
+            taskService.dependencyIdChecker(dependencyIds);
             List<Task> dependencies = taskRepository.findAllById(dependencyIds);
             savedtask.setDependencies(new HashSet<>(dependencies));
         }
