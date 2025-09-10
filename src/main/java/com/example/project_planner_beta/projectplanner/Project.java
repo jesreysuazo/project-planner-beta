@@ -1,10 +1,12 @@
 package com.example.project_planner_beta.projectplanner;
 
+// import lombok.Data;
 import jakarta.persistence.*;
 
 import java.util.List;
 
 @Entity
+// @Data
 public class Project {
 
     @Id
@@ -32,5 +34,4 @@ public class Project {
 
     public List<Task> getTasks() {return tasks;}
     public void setTasks(List<Task> task) {this.tasks = tasks;}
-
 }

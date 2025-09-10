@@ -47,7 +47,7 @@ public class TaskService {
 
         if(savedTask.getDependencies() != null && !savedTask.getDependencies().isEmpty()){
 
-            //check if start date of task is after the end date of task dependencies
+            // check if start date of task is after the end date of task dependencies
             validateDependencyDates(task);
 
             log.info("Validating " + savedTask.getDependencies().size() + " task dependencies for task ID= " + savedTask.getId());
@@ -200,10 +200,12 @@ public class TaskService {
      */
     private boolean isDependentOn(Task current, Long targetId, Set<Long> visited){
         System.out.println("LOOP CHECKER -- TASK ID: " + targetId + ",DEPENDENT ID: " + current.getId() );
+        log.info("Checking task dependency ID=" + current.getId() + "for potential dependency looping. IDS visited: " + visited);
         if(current.getId().equals(targetId)){
             return true;
         }
         if(visited.contains(current.getId())){
+            log.info("no circular dependency detected");
             return false;
         }
         visited.add(current.getId());
@@ -211,6 +213,7 @@ public class TaskService {
 
         for (Task dep : current.getDependencies()){
             if(isDependentOn(dep, targetId, visited)){
+                log.info("circular dependency detected");
                 return true;
             }
         }
@@ -340,7 +343,6 @@ public class TaskService {
         result.add(task);
     }
 
-
     /**
      * Calculates the duration of the task
      *
@@ -360,10 +362,13 @@ public class TaskService {
      * @param end end date (YYYY-MM-DD)
      */
     private void validateDates(LocalDate start, LocalDate end) {
+        log.info("Validating dates: start=" + start + ", end=" + end );
         if (end.isBefore(start)) {
+            log.info("End date cannot be before start date");
             throw new BadRequestException("End date cannot be before start date");
         }
         if (start.isAfter(end)) {
+            log.info("Start date cannot be after end date");
             throw new BadRequestException("Start date cannot be after end date");
         }
     }
@@ -377,10 +382,14 @@ public class TaskService {
         LocalDate dependencyEnd = task.getDependencies().stream()
                 .map(Task::getEndDate)
                 .max(LocalDate::compareTo)
-                .orElseThrow(() -> new BadRequestException("Error on getting latest end date"));
+                .orElseThrow(() -> {
+                    log.info("Error on getting latest end date");
+                    return new BadRequestException("Error on getting latest end date");
+                });
 
         if(parentStart.isBefore(dependencyEnd)){
-            throw new BadRequestException("Cannot add dependency. Cannot start task until dependencies are done");
+            log.info("Cannot add dependency. Cannot set start date before the dependency task's end date.");
+            throw new BadRequestException("Cannot add dependency. Cannot set start date before the dependency task's end date.");
         }
     }
 

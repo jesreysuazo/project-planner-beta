@@ -4,10 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 @Service
 public class ProjectService {
-
+    private static final Logger log = Logger.getLogger(ProjectService.class.getName());
     @Autowired
     private ProjectRepository projectRepository;
 
@@ -22,7 +23,9 @@ public class ProjectService {
         project.setCode(generateProjectCode());
         project.setTasks(null);
 
-        return projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
+        log.info("Project ID=" + savedProject.getId() + " created");
+        return savedProject;
     }
 
     /**
@@ -44,6 +47,7 @@ public class ProjectService {
             code = builder.toString();
         } while (projectRepository.findByCode(code) != null);
 
+        log.info("Generated code: " + code);
         return code;
     }
 
@@ -53,7 +57,9 @@ public class ProjectService {
      * @return list of all projects
      */
     public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+        List<Project> projectList = projectRepository.findAll();
+        log.info("Retrieved " + projectList.size() + " projects");
+        return projectList;
     }
 
     /**
@@ -87,6 +93,7 @@ public class ProjectService {
         }
 
         List<Task> tasks = project.getTasks();
+        log.info("Retrieved " + tasks.size() + " tasks");
         return tasks != null ? tasks : Collections.emptyList();
     }
 }
