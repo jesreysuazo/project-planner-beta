@@ -22,16 +22,32 @@ public class ProjectController {
         this.taskService = taskService;
     }
 
+    /**
+     * retrieves all task belonging to a specific project by its project code
+     * @param code unique project code
+     * @return list of task associated to the project
+     */
     @GetMapping("/{code}/tasks")
     public List<Task> getTasksByProjectCode(@PathVariable String code){
         return projectService.getTaskByCode(code);
     }
 
+    /**
+     * creates new project
+     *
+     * @param project The project data (only name is required for the payload)
+     * @return the created project
+     */
     @PostMapping()
     public Project createProject( @RequestBody Project project){
         return projectService.createProject(project.getName());
     }
 
+    /**
+     * retrieves all project
+     *
+     * @return a list of projects
+     */
     @GetMapping
     public List<ProjectDTO> getAllProjects(){
 
@@ -39,6 +55,12 @@ public class ProjectController {
         return ProjectMapper.toDTOList(project);
     }
 
+    /**
+     * retrieves details of a single project by its ID
+     *
+     * @param id id of project
+     * @return details of project
+     */
     @GetMapping("/{id}")
     public ProjectDTO getProjectDetails(@PathVariable Long id){
         Project project = projectService.getProjectById(id)
@@ -46,16 +68,34 @@ public class ProjectController {
         return ProjectMapper.toDTO(project);
     }
 
+    /**
+     * generates a schedule for a single project by its ID
+     *
+     * @param id id of project
+     * @return a map containing a list of task in order according to its start dates and end dates
+     *              and the duration of project in days
+     */
     @PostMapping("/schedule/{id}")
     public Map<String,Object> scheduleProject(@PathVariable Long id){
         return taskService.generateSchedule(id);
     }
 
+    /**
+     * generates a schedule for all projects
+     * @return a list of map containing a  list of tasks in order according to its start dates and end dates
+     *              and the duration of project in days
+     */
     @PostMapping("/schedule/all")
     public List<Map<String, Object>> scheduleAllProjects(){
         return taskService.generateAllSchedule();
     }
 
+    /**
+     * deletes a project and all tasks under it
+     *
+     * @param id of project to be deleted
+     * @return a confirmation response for deletion of project
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id){
         Optional<Project> project = projectService.getProjectById(id);

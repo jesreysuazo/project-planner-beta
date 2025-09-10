@@ -35,8 +35,6 @@ public class TaskService {
             log.info("Failed to create task. Project with code "+ task.getProjectCode() +" does not exist");
             throw new BadRequestException("Project with code " + task.getProjectCode() + " does not exist");
         }
-        //check if start date of task is after the end date of task dependencies
-        validateDependencyDates(task);
 
         validateDates(task.getStartDate(), task.getEndDate());
 
@@ -46,9 +44,12 @@ public class TaskService {
         task.setStatus(TaskStatus.NOT_STARTED); // default status
 
         Task savedTask = taskRepository.save(task);
-        log.info("Task saved with ID= " + savedTask.getId());
 
         if(savedTask.getDependencies() != null && !savedTask.getDependencies().isEmpty()){
+
+            //check if start date of task is after the end date of task dependencies
+            validateDependencyDates(task);
+
             log.info("Validating " + savedTask.getDependencies().size() + " task dependencies for task ID= " + savedTask.getId());
 
             Set<Task> dependencies = savedTask.getDependencies();
@@ -64,6 +65,7 @@ public class TaskService {
             }
         }
 
+        log.info("Task saved with ID= " + savedTask.getId());
         return savedTask;
     }
 
@@ -94,8 +96,6 @@ public class TaskService {
             throw new BadRequestException("Cannot change project code");
         }
 
-       //check if start date of task is after the end date of task dependencies
-        validateDependencyDates(updatedTask);
 
         // check if dependency is DONE
         if(updatedTask.getStatus() == TaskStatus.IN_PROGRESS || updatedTask.getStatus() == TaskStatus.DONE){
@@ -121,6 +121,10 @@ public class TaskService {
         existingRecord.setStatus(updatedTask.getStatus());
 
         if (updatedTask.getDependencies() != null && !updatedTask.getDependencies().isEmpty()) {
+
+            //check if start date of task is after the end date of task dependencies
+            validateDependencyDates(updatedTask);
+
             for (Task dep : updatedTask.getDependencies()) {
                 System.out.println("Adding dependency id: " + dep.getId() + ", with project code of: "+  dep.getProjectCode());
                 if (!updatedTask.getProjectCode().equals(dep.getProjectCode())) {
@@ -138,6 +142,7 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(existingRecord);
 
+        log.info("Task updated with ID= " + savedTask.getId());
         return savedTask;
     }
 
@@ -149,7 +154,9 @@ public class TaskService {
      * @return A list of all tasks under the project
      */
     public List<Task> getTasksByProjectCode(String code){
-        return taskRepository.findByProjectCode(code);
+        List<Task> tasks = taskRepository.findByProjectCode(code);
+        log.info("Retrieved " + tasks.size() + "tasks using project code: " + code);
+        return tasks;
     }
 
     /**
@@ -159,6 +166,7 @@ public class TaskService {
      */
     public void deleteTaskById(Long id){
         taskRepository.deleteById(id);
+        log.info("Task with ID=" + id + " is deleted");
     }
 
     /**
@@ -309,6 +317,7 @@ public class TaskService {
 
     /**
      * a recursive function for sorting the task based on its dependencies
+     *
      * @param task task being checked
      * @param visited list of IDs checked
      * @param result sorted task
@@ -334,6 +343,7 @@ public class TaskService {
 
     /**
      * Calculates the duration of the task
+     *
      * @param start start date (YYYY-MM-DD)
      * @param end end date (YYYY-MM-DD)
      * @return long duration of task
@@ -359,8 +369,8 @@ public class TaskService {
     }
 
     /**
-     * Check if the
-     * @param task
+     * Check if the start date of parent task is after the end date of dependency task
+     * @param task task to be checked for dependency dates
      */
     private void validateDependencyDates(Task task){
         LocalDate parentStart = task.getStartDate().minusDays(1);

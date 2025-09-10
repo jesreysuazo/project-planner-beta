@@ -21,12 +21,30 @@ public class TaskController {
     @Autowired
     private TaskRepository taskRepository;
 
+    /**
+     * retrieves all tasks under a project by its project code
+     *
+     * @param projectCode unique code of a project
+     * @return list of task under a project
+     */
     @GetMapping("/code/{projectCode}")
     public List<TaskDTO> getTasksByCode(@PathVariable String projectCode){
         List<Task> tasks = taskService.getTasksByProjectCode(projectCode);
         return TaskMapper.toDTOList(tasks);
     }
 
+    /**
+     * creates a task
+     *
+     * @param request {
+     *      name: name of task
+     *      projectCode: unique code of a project where the task will be under
+     *      startDate: YYYY-MM-DD
+     *      endDate: YYYY-MM-DD
+     *      dependencyIds: [ id of a task to be added as dependency ]
+     *   }
+     * @return created task
+     */
     @PostMapping
     public ResponseEntity<TaskDTO> createTask(@RequestBody CreateTaskRequestDTO request) {
         Task task = new Task();
@@ -50,9 +68,22 @@ public class TaskController {
         return ResponseEntity.ok(TaskMapper.toDTO(createdTask));
     }
 
+    /**
+     * updates an existing task based on its ID
+     *
+     * @param id id of the task to be updated
+     * @param updatedTask {
+     *            name: name of task
+     *            projectCode: unique code of a project where the task will be under
+     *            startDate: YYYY-MM-DD
+     *            endDate: YYYY-MM-DD
+     *            dependencyIds: [ id of a task to be added as dependency ]
+     *         }
+     * @return the updated task
+     */
     @PutMapping("/{id}")
     public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id,@RequestBody UpdateTaskRequestDTO updatedTask){
-        Task oldRecord = taskRepository.findById(id).orElseThrow(() -> new BadRequestException("Cannot find ID"));
+        Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> new BadRequestException("Cannot find ID"));
 
         Task savedtask = new Task();
 
@@ -75,6 +106,12 @@ public class TaskController {
         return ResponseEntity.ok(TaskMapper.toDTO(saved));
     }
 
+    /**
+     * retrieves the details of the task by its ID
+     *
+     * @param id id of the task
+     * @return details of the task
+     */
     @GetMapping("/{id}")
     public TaskDTO getTaskById(@PathVariable Long id){
         Task task = taskService.getTaskDetails(id)
@@ -83,6 +120,12 @@ public class TaskController {
         return TaskMapper.toDTO(task);
     }
 
+    /**
+     * deletes a task
+     *
+     * @param id id of task
+     * @return a confirmation response for deletion
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id){
         Optional<Task> task = taskService.getTaskDetails(id);
@@ -93,8 +136,12 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
-
-    // debugging payloads
+    /**
+     * endpoint for checking if correct payload is passed upon request
+     *
+     * @param rawBody any payload in JSON format
+     * @return the rawBody ideally
+     */
     @PostMapping("/debug")
     public String debugRequest(@RequestBody String rawBody){
         System.out.println("Payload" + rawBody);
