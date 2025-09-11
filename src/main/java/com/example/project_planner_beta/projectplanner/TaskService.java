@@ -99,13 +99,12 @@ public class TaskService {
         if(updatedTask.getStatus() == TaskStatus.IN_PROGRESS || updatedTask.getStatus() == TaskStatus.DONE){
             if(updatedTask.getDependencies()!= null && !updatedTask.getDependencies().isEmpty()) {
                 for(Task dep: existingRecord.getDependencies()){
-                    System.out.println("dependency id: "+ dep.getId() +",dependency status: "+dep.getStatus());
-
-                    System.out.println("status update: "+updatedTask.getStatus());
 
                     if(dep.getStatus() == TaskStatus.NOT_STARTED || dep.getStatus() == TaskStatus.IN_PROGRESS){
+                        log.info("Cannot start task until dependencies are DONE");
                         throw new BadRequestException("Cannot start task until dependencies are DONE");
                     }
+
                 }
             }
         }
@@ -124,11 +123,13 @@ public class TaskService {
             validateDependencyDates(updatedTask);
 
             for (Task dep : updatedTask.getDependencies()) {
-                System.out.println("Adding dependency id: " + dep.getId() + ", with project code of: "+  dep.getProjectCode());
+
                 if (!updatedTask.getProjectCode().equals(dep.getProjectCode())) {
+                    log.info("All dependencies must belong to the same project");
                     throw new BadRequestException("All dependencies must belong to the same project");
                 }
                 if (willLoop(existingRecord, dep)) {
+                    log.info("This action will result in a circular dependency");
                     throw new BadRequestException("This action will result in a circular dependency");
                 }
             }
@@ -196,7 +197,7 @@ public class TaskService {
      * @return true if circular dependency is detected, false if none is detected
      */
     private boolean isDependentOn(Task current, Long targetId, Set<Long> visited){
-        System.out.println("LOOP CHECKER -- TASK ID: " + targetId + ",DEPENDENT ID: " + current.getId() );
+
         log.info("Checking task dependency ID=" + current.getId() + "for potential dependency looping. IDS visited: " + visited);
         if(current.getId().equals(targetId)){
             return true;
@@ -215,6 +216,7 @@ public class TaskService {
             }
         }
 
+        log.info("no circular dependency detected");
         return false;
     }
 
@@ -226,10 +228,14 @@ public class TaskService {
      */
     @Transactional
     public Map<String, Object> generateSchedule(Long projectId){
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new BadRequestException("Cannot find project with ID: " + projectId));
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> {
+            log.info("Cannot find project with ID: " + projectId);
+            return new BadRequestException("Cannot find project with ID: " + projectId);
+        });
 
         List<Task> tasks = project.getTasks();
         if(tasks == null || tasks.isEmpty()){
+            log.info("Project with ID: " + projectId + " has no tasks. Cannot generate a schedule");
             throw new BadRequestException("Project with ID: " + projectId + " has no tasks. Cannot generate a schedule");
         }
 
@@ -256,12 +262,18 @@ public class TaskService {
         LocalDate minStart = sortedTasks.stream()
                 .map(Task::getStartDate)
                 .min(LocalDate::compareTo)
-                .orElseThrow(() -> new BadRequestException("Error on getting earliest start date"));
+                .orElseThrow(() -> {
+                    log.info("Error on getting earliest start date");
+                    return new BadRequestException("Error on getting earliest start date");
+                });
 
         LocalDate maxEnd = sortedTasks.stream()
                 .map(Task::getEndDate)
                 .max(LocalDate::compareTo)
-                .orElseThrow(() -> new BadRequestException("Error on getting latest end date"));
+                .orElseThrow(() -> {
+                    log.info("Error on getting latest end date");
+                    return new BadRequestException("Error on getting latest end date");
+                });
 
         long totalDays = ChronoUnit.DAYS.between(minStart, maxEnd) + 1;
 
@@ -392,7 +404,7 @@ public class TaskService {
 
     /**
      * Check if IDs added on dependency are invalid
-     * @param dependency
+     * @param dependency dependency to be checked
      */
     public void dependencyIdChecker (Set<Long> dependency){
         for(Long id: dependency){

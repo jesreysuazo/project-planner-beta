@@ -65,7 +65,6 @@ public class TaskController {
 
 
         Task createdTask = taskService.createTask(task);
-        System.out.println("Task saved. Generated ID:" + createdTask.getId());
 
         return ResponseEntity.ok(TaskMapper.toDTO(createdTask));
     }
@@ -148,7 +147,6 @@ public class TaskController {
      */
     @PostMapping("/debug")
     public String debugRequest(@RequestBody String rawBody){
-        System.out.println("Payload" + rawBody);
         return rawBody;
     }
 }
