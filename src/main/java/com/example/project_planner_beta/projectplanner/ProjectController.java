@@ -23,16 +23,6 @@ public class ProjectController {
     }
 
     /**
-     * retrieves all task belonging to a specific project by its project code
-     * @param code unique project code
-     * @return list of task associated to the project
-     */
-    @GetMapping("/{code}/tasks")
-    public List<Task> getTasksByProjectCode(@PathVariable String code){
-        return projectService.getTaskByCode(code);
-    }
-
-    /**
      * creates new project
      *
      * @param project The project data (only name is required for the payload)
@@ -107,3 +97,4 @@ public class ProjectController {
     }
 
 }
+
