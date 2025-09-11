@@ -28,7 +28,7 @@ public class TaskService {
     @Transactional
     public Task createTask(Task task) {
 
-        log.info("Creating new task: name:" + task.getName() +", projectCode: " +task.getProjectCode());
+        log.info("Creating new task: name:" + task.getName() + ", projectCode: " + task.getProjectCode());
 
         Project project = projectRepository.findByCode(task.getProjectCode());
         if (project == null) {
@@ -69,7 +69,6 @@ public class TaskService {
         return savedTask;
     }
 
-
     /**
      * Updates an existing task by its ID.
      *
@@ -95,7 +94,6 @@ public class TaskService {
             log.info("Cannot change project code");
             throw new BadRequestException("Cannot change project code");
         }
-
 
         // check if dependency is DONE
         if(updatedTask.getStatus() == TaskStatus.IN_PROGRESS || updatedTask.getStatus() == TaskStatus.DONE){
@@ -145,7 +143,6 @@ public class TaskService {
         log.info("Task updated with ID= " + savedTask.getId());
         return savedTask;
     }
-
 
     /**
      * Gets the list of task under the project
@@ -229,11 +226,11 @@ public class TaskService {
      */
     @Transactional
     public Map<String, Object> generateSchedule(Long projectId){
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new BadRequestException("Cannot find project"));
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new BadRequestException("Cannot find project with ID: " + projectId));
 
         List<Task> tasks = project.getTasks();
         if(tasks == null || tasks.isEmpty()){
-            throw new BadRequestException("No tasks under this Project.");
+            throw new BadRequestException("Project with ID: " + projectId + " has no tasks. Cannot generate a schedule");
         }
 
         List<Task> sortedTasks = sortTask(tasks);
