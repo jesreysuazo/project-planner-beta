@@ -1,7 +1,7 @@
-package com.example.project_planner_beta.mapper;
+package com.example.project_planner_beta.projectplanner.tools;
 
-import com.example.project_planner_beta.dto.ProjectDTO;
-import com.example.project_planner_beta.model.Project;
+import com.example.project_planner_beta.projectplanner.Project;
+import com.example.project_planner_beta.projectplanner.dto.ProjectDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +16,6 @@ public class ProjectMapper {
         dto.setCode(project.getCode());
 
         if(project.getTasks() != null){
-            System.out.println("This project contains task(s)");
             dto.setTasks(
                     TaskMapper.toDTOList(project.getTasks())
 

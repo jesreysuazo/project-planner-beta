@@ -1,8 +1,8 @@
-package com.example.project_planner_beta.mapper;
+package com.example.project_planner_beta.projectplanner.tools;
 
-import com.example.project_planner_beta.dto.DependencyDTO;
-import com.example.project_planner_beta.dto.TaskDTO;
-import com.example.project_planner_beta.model.Task;
+import com.example.project_planner_beta.projectplanner.Task;
+import com.example.project_planner_beta.projectplanner.dto.DependencyDTO;
+import com.example.project_planner_beta.projectplanner.dto.TaskDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,7 +36,6 @@ public class TaskMapper {
     public static List<TaskDTO> toDTOList(List<Task> tasks){
         for (int i = 0; i < tasks.size(); i++ ){
             Task t = tasks.get(i);
-            System.out.println("Added task id: " + t.getId());
         }
         return tasks.stream()
                 .map(TaskMapper::toDTO)

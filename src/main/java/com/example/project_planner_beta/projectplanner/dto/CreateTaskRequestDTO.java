@@ -1,9 +1,9 @@
-package com.example.project_planner_beta.dto;
+package com.example.project_planner_beta.projectplanner.dto;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public class CreateTaskRequest {
+public class CreateTaskRequestDTO {
     private String name;
     private String projectCode;
     private LocalDate startDate;

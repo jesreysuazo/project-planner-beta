@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "0d20c2ba-7485-4163-b31e-00ecf34669df",
-		"name": "ProjectPlanner Beta",
+		"_postman_id": "34c4b419-d68b-4b59-98f7-b6467be30942",
+		"name": "ProjectPlanner Beta v2.0.0",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -56,14 +56,33 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{BASE_URL}}/api/projects/3",
+					"raw": "{{BASE_URL}}/api/projects/1",
 					"host": [
 						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
 						"projects",
-						"3"
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get project details(invalid id)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/projects/99",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"projects",
+						"99"
 					]
 				}
 			},
@@ -75,14 +94,33 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{BASE_URL}}/api/projects/3",
+					"raw": "{{BASE_URL}}/api/projects/99",
 					"host": [
 						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
 						"projects",
-						"3"
+						"99"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete project(invalid id)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/projects/2",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"projects",
+						"2"
 					]
 				}
 			},
@@ -95,7 +133,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"name\":\"proj 3 task 2\",\r\n    \"projectCode\": \"V9KUR0\",\r\n    \"startDate\": \"2025-09-07\",\r\n    \"endDate\": \"2025-09-10\",\r\n    \"dependencyIds\":[6]\r\n}",
+					"raw": "{\r\n    \"name\":\"project 3 task 2\",\r\n    \"projectCode\": \"GW8382\",\r\n    \"startDate\": \"2025-09-09\",\r\n    \"endDate\": \"2025-09-11\",\r\n    \"dependencyIds\":[]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -141,14 +179,14 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{BASE_URL}}/api/tasks/2",
+					"raw": "{{BASE_URL}}/api/tasks/201",
 					"host": [
 						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
 						"tasks",
-						"2"
+						"201"
 					]
 				}
 			},
@@ -161,7 +199,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"name\":\"Updated Task 3\",\r\n    \"status\":\"IN_PROGRESS\",\r\n    \"startDate\": \"2025-09-07\",\r\n    \"endDate\": \"2025-09-11\",\r\n    \"dependencyIds\":[2]\r\n}",
+					"raw": "{\r\n    \"name\":\"Updated Task\",\r\n    \"status\":\"NOT_STARTED\",\r\n    \"startDate\": \"2025-09-21\",\r\n    \"endDate\": \"2025-09-21\",\r\n    \"dependencyIds\":[21]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -169,14 +207,14 @@
 					}
 				},
 				"url": {
-					"raw": "{{BASE_URL}}/api/tasks/3",
+					"raw": "{{BASE_URL}}/api/tasks/17",
 					"host": [
 						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
 						"tasks",
-						"3"
+						"17"
 					]
 				}
 			},
@@ -188,26 +226,26 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{BASE_URL}}/api/tasks/4",
+					"raw": "{{BASE_URL}}/api/tasks/999",
 					"host": [
 						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
 						"tasks",
-						"4"
+						"999"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "generate schedule",
+			"name": "generate project schedule",
 			"request": {
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "{{BASE_URL}}/api/projects/schedule/1",
+					"raw": "{{BASE_URL}}/api/projects/schedule/2",
 					"host": [
 						"{{BASE_URL}}"
 					],
@@ -215,7 +253,27 @@
 						"api",
 						"projects",
 						"schedule",
-						"1"
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "generate all project schedule",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/api/projects/schedule/all",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"projects",
+						"schedule",
+						"all"
 					]
 				}
 			},
@@ -228,7 +286,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"name\":\"task 6\",\r\n    \"projectCode\": \"N64RLA\",\r\n    \"startDate\": \"2025-09-07\",\r\n    \"endDate\": \"2025-09-09\",\r\n    \"dependencies\":[1]\r\n}",
+					"raw": "{\r\n    \"name\":\"task  6\",\r\n    \"projectCode\": \"N64RLA\",\r\n    \"startDate\": \"2025-09-07\",\r\n    \"endDate\": \"2025-09-09\",\r\n    \"dependencies\":[1]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

@@ -1,5 +1,4 @@
-package com.example.project_planner_beta.exception;
-
+package com.example.project_planner_beta.common;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

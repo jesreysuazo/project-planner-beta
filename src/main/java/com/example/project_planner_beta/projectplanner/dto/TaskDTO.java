@@ -1,6 +1,6 @@
-package com.example.project_planner_beta.dto;
+package com.example.project_planner_beta.projectplanner.dto;
 
-import com.example.project_planner_beta.model.TaskStatus;
+import com.example.project_planner_beta.projectplanner.TaskStatus;
 
 import java.time.LocalDate;
 import java.util.List;
