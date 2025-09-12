@@ -1,6 +1,7 @@
 package com.example.project_planner_beta.projectplanner;
 
 import com.example.project_planner_beta.common.BadRequestException;
+import com.example.project_planner_beta.projectplanner.dto.ProjectScheduleDTO;
 import com.example.project_planner_beta.projectplanner.tools.TaskMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -227,7 +228,7 @@ public class TaskService {
      * @return a map containing array of task in order, duration of the project in days
      */
     @Transactional
-    public Map<String, Object> generateSchedule(Long projectId){
+    public ProjectScheduleDTO generateSchedule(Long projectId){
         Project project = projectRepository.findById(projectId).orElseThrow(() -> {
             log.info("Cannot find project with ID: " + projectId);
             return new BadRequestException("Cannot find project with ID: " + projectId);
@@ -249,6 +250,7 @@ public class TaskService {
                         .map(Task::getEndDate)
                         .max(LocalDate::compareTo)
                         .orElse(task.getStartDate());
+
 
                 LocalDate newStart = latestEnd.plusDays(1);
                 LocalDate newEnd = newStart.plusDays(task.getDuration() - 1);
@@ -277,11 +279,18 @@ public class TaskService {
 
         long totalDays = ChronoUnit.DAYS.between(minStart, maxEnd) + 1;
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("tasks", TaskMapper.toDTOList(sortedTasks));
-        response.put("projectDuration", totalDays);
+        //Map<String, Object> response = new HashMap<>();
+        //response.put("tasks", TaskMapper.toDTOList(sortedTasks));
+        //response.put("projectDuration", totalDays);
 
-        return response;
+        //return response;
+
+        return new ProjectScheduleDTO(
+                project.getId(),
+                project.getName(),
+                totalDays,
+                TaskMapper.toDTOList(sortedTasks)
+        );
     }
 
     /**
@@ -290,21 +299,17 @@ public class TaskService {
      * @return A list of map containing id of project, name of project, tasks under it, and project duration
      */
     @Transactional
-    public List<Map<String, Object>> generateAllSchedule(){
+    public List<ProjectScheduleDTO> generateAllSchedule(){
         List<Project> projects = projectRepository.findAll();
         if(projects == null || projects.isEmpty()){
             throw new BadRequestException("No projects found");
         }
 
-        List<Map<String, Object>> allSchedules = new ArrayList<>();
+        List<ProjectScheduleDTO> allSchedules = new ArrayList<>();
 
         for(Project project: projects){
-            Map<String, Object> schedule = generateSchedule(project.getId());
 
-            schedule.put("projectId", project.getId());
-            schedule.put("projectName", project.getName());
-
-            allSchedules.add(schedule);
+            allSchedules.add(generateSchedule(project.getId()));
         }
 
         return allSchedules;
@@ -340,8 +345,10 @@ public class TaskService {
         if(visited.contains(task)){
             return;
         }
+
         visited.add(task);
 
+        // check for dependencies
         if(task.getDependencies() != null){
             for(Task dep:task.getDependencies()){
                 sortDependencies(dep, visited, result);

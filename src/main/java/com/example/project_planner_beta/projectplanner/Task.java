@@ -1,5 +1,6 @@
 package com.example.project_planner_beta.projectplanner;
 
+// import lombok.Data;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -7,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+// @Data
 public class Task {
 
     @Id
@@ -74,4 +76,3 @@ public class Task {
     public void setProject(Project project) {this.project = project;}
 
 }
-

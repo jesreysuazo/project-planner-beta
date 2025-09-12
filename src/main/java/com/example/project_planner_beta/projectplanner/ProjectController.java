@@ -2,6 +2,7 @@ package com.example.project_planner_beta.projectplanner;
 
 import com.example.project_planner_beta.common.BadRequestException;
 import com.example.project_planner_beta.projectplanner.dto.ProjectDTO;
+import com.example.project_planner_beta.projectplanner.dto.ProjectScheduleDTO;
 import com.example.project_planner_beta.projectplanner.tools.ProjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -66,7 +67,7 @@ public class ProjectController {
      *              and the duration of project in days
      */
     @PostMapping("/schedule/{id}")
-    public Map<String,Object> scheduleProject(@PathVariable Long id){
+    public ProjectScheduleDTO scheduleProject(@PathVariable Long id){
         return taskService.generateSchedule(id);
     }
 
@@ -76,7 +77,7 @@ public class ProjectController {
      *              and the duration of project in days
      */
     @PostMapping("/schedule/all")
-    public List<Map<String, Object>> scheduleAllProjects(){
+    public List<ProjectScheduleDTO> scheduleAllProjects(){
         return taskService.generateAllSchedule();
     }
 
@@ -97,4 +98,3 @@ public class ProjectController {
     }
 
 }
-
