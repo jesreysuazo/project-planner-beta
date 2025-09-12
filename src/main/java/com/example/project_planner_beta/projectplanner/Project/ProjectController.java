@@ -1,6 +1,5 @@
 package com.example.project_planner_beta.projectplanner.Project;
 
-import com.example.project_planner_beta.common.BadRequestException;
 import com.example.project_planner_beta.projectplanner.Task.TaskService;
 import com.example.project_planner_beta.projectplanner.Project.dto.ProjectDTO;
 import com.example.project_planner_beta.projectplanner.Project.dto.ProjectScheduleDTO;
@@ -10,11 +9,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/projects")
 public class ProjectController {
-
+    private static final Logger log = Logger.getLogger(ProjectController.class.getName());
     private final ProjectService projectService;
     private final TaskService taskService;
 
@@ -55,7 +55,10 @@ public class ProjectController {
     @GetMapping("/{id}")
     public ProjectDTO getProjectDetails(@PathVariable Long id){
         Project project = projectService.getProjectById(id)
-                .orElseThrow(() -> new BadRequestException("No project found"));
+                .orElseThrow(() -> {
+                    log.severe("No project found");
+                    return new RuntimeException("No project found");
+                });
         return ProjectMapper.toDTO(project);
     }
 
@@ -91,6 +94,7 @@ public class ProjectController {
     public ResponseEntity<Void> deleteTask(@PathVariable Long id){
         Optional<Project> project = projectService.getProjectById(id);
         if (project.isEmpty()){
+            log.severe("Project not found");
             return ResponseEntity.notFound().build();
         }
         projectService.deleteProject(id);

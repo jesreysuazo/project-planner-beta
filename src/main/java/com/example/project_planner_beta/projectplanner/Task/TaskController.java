@@ -1,6 +1,5 @@
 package com.example.project_planner_beta.projectplanner.Task;
 
-import com.example.project_planner_beta.common.BadRequestException;
 import com.example.project_planner_beta.projectplanner.Task.dto.CreateTaskRequestDTO;
 import com.example.project_planner_beta.projectplanner.Task.dto.TaskDTO;
 import com.example.project_planner_beta.projectplanner.Task.dto.UpdateTaskRequestDTO;
@@ -10,10 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
+    private static final Logger log = Logger.getLogger(TaskController.class.getName());
 
     @Autowired
     private TaskService taskService;
@@ -84,7 +85,10 @@ public class TaskController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id,@RequestBody UpdateTaskRequestDTO updatedTask){
-        Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> new BadRequestException("Update failed. Invalid ID provided"));
+        Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> {
+            log.severe("Update failed. Invalid ID provided");
+            return new RuntimeException("Update failed. Invalid ID provided");
+        });
 
         Task savedtask = new Task();
 
@@ -118,7 +122,10 @@ public class TaskController {
     @GetMapping("/{id}")
     public TaskDTO getTaskById(@PathVariable Long id){
         Task task = taskService.getTaskDetails(id)
-                .orElseThrow(() -> new BadRequestException("Cannot find task"));
+                .orElseThrow(() -> {
+                    log.severe("Cannot find task");
+                    return new RuntimeException("Cannot find task");
+                });
 
         return TaskMapper.toDTO(task);
     }
@@ -133,6 +140,7 @@ public class TaskController {
     public ResponseEntity<Void> deleteTask(@PathVariable Long id){
         Optional<Task> task = taskService.getTaskDetails(id);
         if (task.isEmpty()){
+            log.severe("Invalid ID provided. Deleting failed");
             return ResponseEntity.notFound().build();
         }
         taskService.deleteTaskById(id);
