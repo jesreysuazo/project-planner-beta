@@ -81,7 +81,7 @@ public class ProjectService {
         log.fine("Deleting Project ID: "+ id);
         Project project = projectRepository.findById(id).orElseThrow(() -> {
             log.severe("Project not found");
-            return new RuntimeException("Project not found.");
+            return new RuntimeException("Unable to process request. Project not found.");
         });
         projectRepository.deleteById(project.getId());
         log.info("Project with ID: " + id + " is deleted");
