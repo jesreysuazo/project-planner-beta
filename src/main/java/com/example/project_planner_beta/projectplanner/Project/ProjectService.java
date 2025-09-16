@@ -87,20 +87,4 @@ public class ProjectService {
         log.info("Project with ID: " + id + " is deleted");
     }
 
-    /**
-     * Gets all tasks under the project
-     *
-     * @param code 6 digit project code
-     * @return list of tasks under the project
-     */
-    public List<Task> getTaskByCode(String code) {
-        Project project = projectRepository.findByCode(code);
-        if (project == null) {
-            return Collections.emptyList();
-        }
-
-        List<Task> tasks = project.getTasks();
-        log.fine("Retrieved " + tasks.size() + " tasks");
-        return tasks != null ? tasks : Collections.emptyList();
-    }
 }
