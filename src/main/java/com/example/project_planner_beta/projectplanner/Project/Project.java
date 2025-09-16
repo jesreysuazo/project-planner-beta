@@ -34,5 +34,5 @@ public class Project {
     public void setCode(String code) {this.code = code;}
 
     public List<Task> getTasks() {return tasks;}
-    public void setTasks(List<Task> task) {this.tasks = tasks;}
+    public void setTasks(List<Task> tasks) {this.tasks = tasks;}
 }

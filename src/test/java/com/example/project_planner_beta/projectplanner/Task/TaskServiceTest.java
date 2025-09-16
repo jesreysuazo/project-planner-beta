@@ -27,6 +27,8 @@ public class TaskServiceTest {
     private TaskService taskService;
 
     private Project project;
+    private Task t1;
+    private Task t2;
 
     @BeforeEach
     void setUp(){
@@ -36,18 +38,33 @@ public class TaskServiceTest {
         project.setId(Long.valueOf(1));
         project.setCode("ABCDEF");
         project.setName("Project 1");
+
+        t1 = new Task();
+        t1.setId(Long.valueOf(1));
+        t1.setName("Task 1");
+        t1.setStartDate(LocalDate.of(2025,9,16));
+        t1.setEndDate(LocalDate.of(2025, 9, 17));
+        t1.setDuration(Long.valueOf(2));
+        t1.setDependencies(new HashSet<>());
+        t1.setProjectCode("ABCDEF");
+        t1.setProject(project);
+
+        t2 = new Task();
+        t2.setId(Long.valueOf(2));
+        t2.setName("Task 2");
+        t2.setStartDate(LocalDate.of(2025,9,18));
+        t2.setEndDate(LocalDate.of(2025, 9, 19));
+        t2.setDuration(Long.valueOf(2));
+        t2.setDependencies(Set.of(t1));
+        t2.setProjectCode("ABCDEF");
+        t2.setProject(project);
+
+        project.setTasks(List.of(t1,t2));
     }
 
     @Test
     void createTask_ShouldSave_ValidCode(){
         //arrange
-        Task task = new Task();
-        task.setName("Task 1");
-        task.setStartDate(LocalDate.of(2025,9,16));
-        task.setEndDate(LocalDate.of(2025, 9, 17));
-        task.setDependencies(new HashSet<>());
-        task.setProjectCode("ABCDEF");
-
         when(projectRepository.findByCode("ABCDEF")).thenReturn(project);
         when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> {
             Task saved =invocation.getArgument(0);
@@ -56,7 +73,7 @@ public class TaskServiceTest {
         });
 
         //assert
-        Task savedTask = taskService.createTask(task);
+        Task savedTask = taskService.createTask(t2);
 
         //act
         assertThat(savedTask.getId()).isEqualTo(Long.valueOf(2));
@@ -66,19 +83,11 @@ public class TaskServiceTest {
 
     @Test
     void createTask_ShouldThrow_WhenInvalidCode(){
-        //arrange
-        Task task = new Task();
-        task.setName("Task 1");
-        task.setStartDate(LocalDate.of(2025,9,16));
-        task.setEndDate(LocalDate.of(2025, 9, 17));
-        task.setDependencies(new HashSet<>());
-        task.setProjectCode("ABCDEF");
-
         //assert
         when(projectRepository.findByCode("ACBDEF")).thenReturn(null);
 
         //act
-        assertThatThrownBy(() -> taskService.createTask(task))
+        assertThatThrownBy(() -> taskService.createTask(t1))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Unable to process request. Project not found");
     }
@@ -118,43 +127,16 @@ public class TaskServiceTest {
                 .hasMessageContaining("Unable to process request. Task not found");
     }
 
-@Test
+    @Test
     void generateSchedule_ShouldCalculateDuration_WhenValid(){
 
-        Project p1 = new Project();
-        p1.setId(Long.valueOf(2));
-        p1.setCode("ASDFGH");
-        p1.setName("Project 2");
-
-        Task t1 = new Task();
-        t1.setId(Long.valueOf(1));
-        t1.setName("Task 1");
-        t1.setStartDate(LocalDate.of(2025,9,16));
-        t1.setEndDate(LocalDate.of(2025, 9, 17));
-        t1.setDependencies(new HashSet<>());
-        t1.setProjectCode("ASDFGH");
-        t1.setProject(p1);
-
-        Task t2 = new Task();
-        t2.setId(Long.valueOf(2));
-        t2.setName("Task 2");
-        t2.setStartDate(LocalDate.of(2025,9,18));
-        t2.setEndDate(LocalDate.of(2025, 9, 19));
-        t2.setDependencies(Set.of(t1));
-        t2.setProjectCode("ASDFGH");
-        t2.setProject(p1);
-
-        p1.setTasks(new ArrayList<>(List.of(t1,t2)));
-
-
-        when(projectRepository.findById(Long.valueOf(2))).thenReturn(Optional.of(p1));
+        when(projectRepository.findById(Long.valueOf(1))).thenReturn(Optional.of(project));
         when(taskRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProjectScheduleDTO schedule = taskService.generateSchedule(Long.valueOf(2));
+        ProjectScheduleDTO schedule = taskService.generateSchedule(Long.valueOf(1));
 
         assertThat(schedule.getProjectDuration()).isGreaterThan(0);
         assertThat(schedule.getTasks()).hasSize(2);
         verify(taskRepository).saveAll(anyList());
     }
 }
-
