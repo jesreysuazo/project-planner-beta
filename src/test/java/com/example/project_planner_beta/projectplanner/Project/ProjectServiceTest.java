@@ -1,5 +1,6 @@
 package com.example.project_planner_beta.projectplanner.Project;
 
+import com.example.project_planner_beta.exception.NotFoundException;
 import com.example.project_planner_beta.projectplanner.Task.Task;
 import com.example.project_planner_beta.projectplanner.Task.TaskStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -133,8 +134,8 @@ public class ProjectServiceTest {
         when(projectRepository.findById(Long.valueOf(100))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> projectService.deleteProject(Long.valueOf(100)))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Unable to process request. Project not found.");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Project not found with ID= " + Long.valueOf(100));
     }
 
 

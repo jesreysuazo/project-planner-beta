@@ -1,5 +1,7 @@
 package com.example.project_planner_beta.projectplanner.Task;
 
+import com.example.project_planner_beta.exception.BadRequestException;
+import com.example.project_planner_beta.exception.NotFoundException;
 import com.example.project_planner_beta.projectplanner.Project.Project;
 import com.example.project_planner_beta.projectplanner.Project.ProjectRepository;
 import com.example.project_planner_beta.projectplanner.Project.dto.ProjectScheduleDTO;
@@ -140,7 +142,7 @@ public class TaskServiceTest {
 
 
         assertThatThrownBy(() -> taskService.createTask(t1))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Unable to process request. All dependencies must belong to the same project.");
     }
 
@@ -160,19 +162,19 @@ public class TaskServiceTest {
         when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         assertThatThrownBy(() -> taskService.createTask(t1))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Unable to process request. Circular dependency detected.");
     }
 
     @Test
     void createTask_ShouldThrow_WhenInvalidCode(){
         //assert
-        when(projectRepository.findByCode("ACBDEF")).thenReturn(null);
+        when(projectRepository.findByCode("ABCDEF")).thenReturn(null);
 
         //act
         assertThatThrownBy(() -> taskService.createTask(t1))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Unable to process request. Project not found");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Project not found with code: " + "ABCDEF");
     }
 
     @Test
@@ -206,8 +208,8 @@ public class TaskServiceTest {
         updatedTask.setName("Update Task 1");
 
         assertThatThrownBy(() -> taskService.updateTask(Long.valueOf(100), updatedTask))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Unable to process request. Task not found");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Unable to process request. Task not found with ID= " + 100);
     }
 
     @Test
@@ -224,7 +226,7 @@ public class TaskServiceTest {
         updatedTask.setDependencies(Set.of(t1));
 
         assertThatThrownBy(() -> taskService.updateTask(Long.valueOf(2), updatedTask))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Unable to process request. Dependencies must be completed first");
 
     }
@@ -241,7 +243,7 @@ public class TaskServiceTest {
         updatedTask.setEndDate(LocalDate.of(2025, 9, 17));
 
         assertThatThrownBy(() -> taskService.updateTask(Long.valueOf(1), updatedTask))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Unable to process request. Cannot change project code");
     }
 
@@ -266,7 +268,7 @@ public class TaskServiceTest {
         updatedTask.setDependencies(Set.of(task));
 
         assertThatThrownBy(() -> taskService.updateTask(Long.valueOf(1), updatedTask))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Unable to process request. All dependencies must belong to the same project.");
     }
 
@@ -291,7 +293,7 @@ public class TaskServiceTest {
         updatedTask.setDependencies(Set.of(task));
 
         assertThatThrownBy(() -> taskService.updateTask(Long.valueOf(1), updatedTask))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Unable to process request. Circular dependency detected.");
     }
 
@@ -342,7 +344,7 @@ public class TaskServiceTest {
         when(projectRepository.findById(Long.valueOf(3))).thenReturn(Optional.of(p3));
 
         assertThatThrownBy(() -> taskService.generateSchedule(Long.valueOf(3)))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Unable to process request. Project has no tasks.");
     }
 
@@ -373,7 +375,7 @@ public class TaskServiceTest {
 
 
         assertThatThrownBy(() -> taskService.generateAllSchedule())
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Unable to process request. Project has no tasks.");
     }
 
@@ -382,7 +384,7 @@ public class TaskServiceTest {
         when(projectRepository.findAll()).thenReturn(new ArrayList<>());
 
         assertThatThrownBy(() -> taskService.generateAllSchedule())
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Unable to process request. No projects found");
     }
 

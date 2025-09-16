@@ -1,5 +1,6 @@
 package com.example.project_planner_beta.projectplanner.Project;
 
+import com.example.project_planner_beta.exception.NotFoundException;
 import com.example.project_planner_beta.projectplanner.Task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -80,8 +81,8 @@ public class ProjectService {
     public void deleteProject(Long id) {
         log.fine("Deleting Project ID: "+ id);
         Project project = projectRepository.findById(id).orElseThrow(() -> {
-            log.severe("Project not found");
-            return new RuntimeException("Unable to process request. Project not found.");
+            log.severe("Project not found with ID= " + id);
+            return new NotFoundException("Project not found with ID= " + id);
         });
         projectRepository.deleteById(project.getId());
         log.info("Project with ID: " + id + " is deleted");
