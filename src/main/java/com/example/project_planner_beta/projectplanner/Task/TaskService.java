@@ -59,7 +59,7 @@ public class TaskService {
             for (Task dep: dependencies){
                 if (!task.getProjectCode().equals(dep.getProjectCode())) {
                     log.warning("Failed to add task dependencies. Project code does not match: expected= " + task.getProjectCode() +" , found= " + dep.getProjectCode() );
-                    throw new RuntimeException("Unable to process request. Dependency project mismatch");
+                    throw new RuntimeException("Unable to process request. All dependencies must belong to the same project.");
                 }
                 if (willLoop(task, dep)) {
                     log.warning("This action will result in a circular dependency");
@@ -129,11 +129,11 @@ public class TaskService {
 
                 if (!updatedTask.getProjectCode().equals(dep.getProjectCode())) {
                     log.warning("Dependency project mismatch on update: expected= " + updatedTask.getProjectCode() + " , found= " + dep.getProjectCode());
-                    throw new RuntimeException("Unable to process request. All dependencies must belong to the same project");
+                    throw new RuntimeException("Unable to process request. All dependencies must belong to the same project.");
                 }
                 if (willLoop(existingRecord, dep)) {
                     log.warning("This action will result in a circular dependency");
-                    throw new RuntimeException("Unable to process request. This action will result in a circular dependency");
+                    throw new RuntimeException("Unable to process request. Circular dependency detected.");
                 }
             }
 
