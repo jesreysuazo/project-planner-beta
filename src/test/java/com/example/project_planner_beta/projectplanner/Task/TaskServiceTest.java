@@ -118,35 +118,43 @@ public class TaskServiceTest {
                 .hasMessageContaining("Unable to process request. Task not found");
     }
 
-    @Test
+@Test
     void generateSchedule_ShouldCalculateDuration_WhenValid(){
+
+        Project p1 = new Project();
+        p1.setId(Long.valueOf(2));
+        p1.setCode("ASDFGH");
+        p1.setName("Project 2");
+
         Task t1 = new Task();
+        t1.setId(Long.valueOf(1));
         t1.setName("Task 1");
         t1.setStartDate(LocalDate.of(2025,9,16));
         t1.setEndDate(LocalDate.of(2025, 9, 17));
         t1.setDependencies(new HashSet<>());
-        t1.setProjectCode("ABCDEF");
+        t1.setProjectCode("ASDFGH");
+        t1.setProject(p1);
 
         Task t2 = new Task();
-        t1.setName("Task 2");
-        t1.setStartDate(LocalDate.of(2025,9,18));
-        t1.setEndDate(LocalDate.of(2025, 9, 19));
-        t1.setDependencies(Set.of(t1));
-        t1.setProjectCode("ABCDEF");
+        t2.setId(Long.valueOf(2));
+        t2.setName("Task 2");
+        t2.setStartDate(LocalDate.of(2025,9,18));
+        t2.setEndDate(LocalDate.of(2025, 9, 19));
+        t2.setDependencies(Set.of(t1));
+        t2.setProjectCode("ASDFGH");
+        t2.setProject(p1);
 
-        Task savedT1 = taskService.createTask(t1);
-        Task savedT2 = taskService.createTask(t2);
-
-        project.setTasks(List.of(savedT2, savedT1));
+        p1.setTasks(new ArrayList<>(List.of(t1,t2)));
 
 
-        when(projectRepository.findById(Long.valueOf(1))).thenReturn(Optional.of(project));
+        when(projectRepository.findById(Long.valueOf(2))).thenReturn(Optional.of(p1));
         when(taskRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProjectScheduleDTO schedule = taskService.generateSchedule(Long.valueOf(1));
+        ProjectScheduleDTO schedule = taskService.generateSchedule(Long.valueOf(2));
 
         assertThat(schedule.getProjectDuration()).isGreaterThan(0);
         assertThat(schedule.getTasks()).hasSize(2);
         verify(taskRepository).saveAll(anyList());
     }
 }
+
