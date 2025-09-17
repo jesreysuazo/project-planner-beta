@@ -1,5 +1,6 @@
 package com.example.project_planner_beta.projectplanner.Task;
 
+import com.example.project_planner_beta.exception.NotFoundException;
 import com.example.project_planner_beta.projectplanner.Task.dto.CreateTaskRequestDTO;
 import com.example.project_planner_beta.projectplanner.Task.dto.TaskDTO;
 import com.example.project_planner_beta.projectplanner.Task.dto.UpdateTaskRequestDTO;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -66,8 +68,8 @@ public class TaskController {
 
 
         Task createdTask = taskService.createTask(task);
-
-        return ResponseEntity.ok(TaskMapper.toDTO(createdTask));
+        URI location = URI.create("/tasks/" + createdTask.getId());
+        return ResponseEntity.created(location).body(TaskMapper.toDTO(createdTask));
     }
 
     /**
@@ -87,7 +89,7 @@ public class TaskController {
     public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id,@RequestBody UpdateTaskRequestDTO updatedTask){
         Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> {
             log.severe("Update failed. Invalid ID provided");
-            return new RuntimeException("Update failed. Invalid ID provided");
+            return new NotFoundException("Update failed. Invalid ID provided");
         });
 
         Task savedtask = new Task();

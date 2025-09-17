@@ -44,6 +44,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String,Object>> handleNotFound(
             RuntimeException ex, HttpServletRequest request
     ){
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,"An unexpected error occured" + ex.getMessage(), request.getRequestURI());
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,"An unexpected error occured. " + ex.getMessage(), request.getRequestURI());
     }
 }
