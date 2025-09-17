@@ -1,5 +1,6 @@
 package com.example.project_planner_beta.projectplanner.Project;
 
+import com.example.project_planner_beta.exception.NotFoundException;
 import com.example.project_planner_beta.projectplanner.Task.TaskService;
 import com.example.project_planner_beta.projectplanner.Project.dto.ProjectDTO;
 import com.example.project_planner_beta.projectplanner.Project.dto.ProjectScheduleDTO;
@@ -7,6 +8,7 @@ import com.example.project_planner_beta.projectplanner.Project.tools.ProjectMapp
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -29,9 +31,12 @@ public class ProjectController {
      * @param project The project data (only name is required for the payload)
      * @return the created project
      */
-    @PostMapping()
-    public Project createProject(@RequestBody Project project){
-        return projectService.createProject(project.getName());
+    @PostMapping
+    public ResponseEntity<Project> createProject(@RequestBody Project project) {
+        Project createdProject = projectService.createProject(project.getName());
+
+        URI location = URI.create("/api/projects/" + createdProject.getId()); // Adjust path as needed
+        return ResponseEntity.created(location).body(createdProject);
     }
 
     /**
@@ -57,7 +62,7 @@ public class ProjectController {
         Project project = projectService.getProjectById(id)
                 .orElseThrow(() -> {
                     log.severe("No project found");
-                    return new RuntimeException("No project found");
+                    return new NotFoundException("No project found");
                 });
         return ProjectMapper.toDTO(project);
     }
@@ -91,7 +96,7 @@ public class ProjectController {
      * @return a confirmation response for deletion of project
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id){
+    public ResponseEntity<Void> deleteProject(@PathVariable Long id){
         Optional<Project> project = projectService.getProjectById(id);
         if (project.isEmpty()){
             log.severe("Project not found");
