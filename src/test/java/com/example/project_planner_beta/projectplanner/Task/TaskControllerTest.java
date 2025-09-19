@@ -3,6 +3,7 @@ package com.example.project_planner_beta.projectplanner.Task;
 import com.example.project_planner_beta.exception.NotFoundException;
 import com.example.project_planner_beta.projectplanner.Project.Project;
 import com.example.project_planner_beta.projectplanner.Task.dto.CreateTaskRequestDTO;
+import com.example.project_planner_beta.projectplanner.Task.dto.UpdateTaskRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -110,6 +111,31 @@ public class TaskControllerTest {
     }
 
     @Test
+    void createTask_ShouldReturn201_WhenDependencyIdsAreProvided() throws Exception {
+        CreateTaskRequestDTO task99 = new CreateTaskRequestDTO();
+        task99.setName("Task with Dependencies");
+        task99.setProjectCode("ABCDEF");
+        task99.setStartDate(LocalDate.of(2025, 9, 15));
+        task99.setEndDate(LocalDate.of(2025, 9, 16));
+        task99.setDependencyIds(List.of(1L, 2L));
+
+        Task createdTask = new Task();
+        createdTask.setId(99L);
+        createdTask.setName("Task with Dependencies");
+
+        doNothing().when(taskService).dependencyIdChecker(Set.of(1L, 2L));
+        when(taskRepository.findAllById(Set.of(1L, 2L))).thenReturn(List.of(t1, t2));
+        when(taskService.createTask(any(Task.class))).thenReturn(createdTask);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(task99)))
+                .andExpect(status().isCreated());
+
+        verify(taskService).createTask(any(Task.class));
+    }
+
+    @Test
     void updateTask_ShouldReturn200_WhenValid() throws Exception{
         Task oldRec = new Task();
         oldRec.setId(1L);
@@ -138,22 +164,50 @@ public class TaskControllerTest {
     @Test
     void updateTask_ShouldReturn500_WhenInvalidId() throws Exception{
         Task updated = new Task();
-        updated.setId(1L);
-        updated.setName("Updated Task 1");
+        updated.setId(99L);
+        updated.setName("Updated Task 99");
         updated.setStatus(TaskStatus.NOT_STARTED);
         updated.setStartDate(t1.getStartDate());
         updated.setEndDate(t1.getEndDate());
         updated.setDependencies(t1.getDependencies());
 
-        when(taskService.getTaskDetails(1L)).thenThrow(new NotFoundException("Update failed. Invalid ID provided"));
+        when(taskService.getTaskDetails(99L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(put("/api/tasks/1")
+        mockMvc.perform(put("/api/tasks/99")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updated)))
                 .andExpect(status().isNotFound());
 
-        verify(taskService).getTaskDetails(1L);
+        verify(taskService).getTaskDetails(99L);
     }
+
+    @Test
+    void updateTask_ShouldReturn200_WhenValidDependencyId() throws Exception {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("name", "Updated Task 99");
+        payload.put("status", "NOT_STARTED");
+        payload.put("startDate", "2025-09-15");
+        payload.put("endDate", "2025-09-16");
+        payload.put("dependencyIds", List.of(1L, 2L));
+
+        Task oldRecord = new Task();
+        oldRecord.setId(99L);
+        oldRecord.setProjectCode("ABC123");
+
+        when(taskService.getTaskDetails(99L)).thenReturn(Optional.of(oldRecord));
+        doNothing().when(taskService).dependencyIdChecker(Set.of(1L, 2L));
+        when(taskRepository.findAllById(Set.of(1L, 2L))).thenReturn(List.of(t1, t2));
+        when(taskService.updateTask(eq(99L), any(Task.class))).thenReturn(oldRecord);
+
+        mockMvc.perform(put("/api/tasks/99")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        verify(taskService).dependencyIdChecker(Set.of(1L, 2L));
+        verify(taskRepository).findAllById(Set.of(1L, 2L));
+    }
+
 
     @Test
     void getTaskById_ShouldReturn200_WhenValid() throws Exception{
