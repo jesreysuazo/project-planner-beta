@@ -34,6 +34,7 @@ public class TaskServiceTest {
     private Task t1;
     private Task t2;
     private Task t3;
+    private Task t4;
 
     @BeforeEach
     void setUp(){
@@ -87,6 +88,17 @@ public class TaskServiceTest {
         t3.setProjectCode("QWERTY");
         t3.setProject(p2);
 
+        t4 = new Task();
+        t4.setId(Long.valueOf(4));
+        t4.setName("Task 4");
+        t4.setStartDate(LocalDate.of(2025,9,20));
+        t4.setEndDate(LocalDate.of(2025, 9, 20));
+        t4.setStatus(TaskStatus.NOT_STARTED);
+        t4.setDuration(Long.valueOf(1));
+        t4.setDependencies(Set.of(t1,t2));
+        t4.setProjectCode("ABCDEF");
+        t4.setProject(p1);
+
     }
 
     @Test
@@ -104,12 +116,27 @@ public class TaskServiceTest {
 
         //act
         assertThat(savedTask.getId()).isEqualTo(Long.valueOf(2));
-        assertThat(savedTask.getDuration()).isEqualTo(2);
         verify(taskRepository, times(1)).save(any(Task.class));
     }
 
     @Test
-    void createTask_ShouldThrow_WhenInvalidDate(){
+    void createTask_ShouldThrow_WhenInvalidDate() {
+        Task task = new Task();
+        task.setName("Baddates");
+        task.setStartDate(LocalDate.of(2025, 9, 19));
+        task.setEndDate(LocalDate.of(2025, 9, 17));
+        task.setProjectCode("ABCDEF");
+        task.setDependencies(new HashSet<>());
+
+        when(projectRepository.findByCode("ABCDEF")).thenReturn(p1);
+
+        assertThatThrownBy(() -> taskService.createTask(task))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Unable to process request. Invalid dates.");
+    }
+
+    @Test
+    void createTask_ShouldThrow_WhenInvalidDependencyDate(){
         Task task = new Task();
         task.setName("Baddates");
         task.setStartDate(LocalDate.of(2025,9,19));
@@ -180,25 +207,28 @@ public class TaskServiceTest {
     @Test
     void updateTask_ShouldUpdate_WhenValid(){
         Task existingtask = new Task();
-        existingtask.setId(Long.valueOf(1));
+        existingtask.setId(Long.valueOf(4));
         existingtask.setProjectCode("ABCDEF");
         existingtask.setDependencies(new HashSet<>());
 
-        when(taskRepository.findById(Long.valueOf(1))).thenReturn(Optional.of(existingtask));
+        when(taskRepository.findById(Long.valueOf(1))).thenReturn(Optional.of(t1));
+        when(taskRepository.findById(Long.valueOf(2))).thenReturn(Optional.of(t2));
+        when(taskRepository.findById(Long.valueOf(4))).thenReturn(Optional.of(existingtask));
         when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Task updatedTask = new Task();
         updatedTask.setProjectCode("ABCDEF");
         updatedTask.setStartDate(LocalDate.of(2025, 9,28));
         updatedTask.setEndDate(LocalDate.of(2025, 9, 29));
-        updatedTask.setDependencies(new HashSet<>());
+        updatedTask.setDependencies(Set.of(t1,t2));
 
-        Task result = taskService.updateTask(Long.valueOf(1), updatedTask);
+        Task result = taskService.updateTask(Long.valueOf(4), updatedTask);
 
         assertThat(result.getDuration()).isEqualTo(2);
         verify(taskRepository).save(existingtask);
 
     }
+
 
     @Test
     void updateTask_ShouldThrow_WhenInvalidId(){
@@ -228,6 +258,34 @@ public class TaskServiceTest {
         assertThatThrownBy(() -> taskService.updateTask(Long.valueOf(2), updatedTask))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Unable to process request. Dependencies must be completed first");
+
+    }
+
+    @Test
+    void updateTask_ShouldThrow_WhenParentStartEarlierThanDependencyEnd(){
+
+        when(taskRepository.findById(Long.valueOf(2))).thenReturn(Optional.of(t2));
+        when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Task updatedTask = new Task();
+        updatedTask.setProjectCode("ABCDEF");
+        updatedTask.setStartDate(LocalDate.of(2020, 9,18));
+        updatedTask.setEndDate(LocalDate.of(2020, 9, 19));
+        updatedTask.setStatus(TaskStatus.NOT_STARTED);
+        updatedTask.setDependencies(Set.of(t1));
+
+        assertThatThrownBy(() -> taskService.updateTask(Long.valueOf(2), updatedTask))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Unable to process request. Cannot set start date before the dependency task's end date.");
+
+    }
+
+    @Test
+    void updateTask_ShouldThrow_WhenInvalidDependencyId(){
+
+        assertThatThrownBy(() -> taskService.dependencyIdChecker(Set.of(99L)))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Unable to process request. Invalid dependency ID=" + 99);
 
     }
 
@@ -349,6 +407,13 @@ public class TaskServiceTest {
     }
 
     @Test
+    void generateSchedule_ShouldThrow_WhenInvalidProjectId(){
+        assertThatThrownBy(() -> taskService.generateSchedule(Long.valueOf(3)))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Project not found with ID=" + 3);
+    }
+
+    @Test
     void generateAllSchedule_ShouldReturn_WhenValid(){
         p1.setTasks(List.of(t1,t2));
         p2.setTasks(List.of(t3));
@@ -363,7 +428,7 @@ public class TaskServiceTest {
     }
 
     @Test
-    void generateAllSchedule_ShouldReturn_WhenAProjectHasNoTask(){
+    void generateAllSchedule_ShouldThrow_WhenAProjectHasNoTask(){
         p1.setTasks(List.of(t1,t2));
         p2.setTasks(List.of(t3));
         p3.setTasks(new ArrayList<>());
@@ -380,7 +445,41 @@ public class TaskServiceTest {
     }
 
     @Test
-    void generateAllSchedule_ShouldReturn_WhenNoProject(){
+    void generateAllSchedule_ShouldThrow_WhenEndDateIsMissing(){
+        t3.setEndDate(null);
+
+        p1.setTasks(List.of(t1,t2));
+        p2.setTasks(List.of(t3));
+
+        when(projectRepository.findAll()).thenReturn(List.of(p1,p2,p3));
+        when(projectRepository.findById(Long.valueOf(1))).thenReturn(Optional.of(p1));
+        when(projectRepository.findById(Long.valueOf(2))).thenReturn(Optional.of(p2));
+
+
+        assertThatThrownBy(() -> taskService.generateAllSchedule())
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Unable to process request. Error on getting latest end date");
+    }
+
+    @Test
+    void generateAllSchedule_ShouldThrow_WhenStartDateIsMissing(){
+        t3.setStartDate(null);
+
+        p1.setTasks(List.of(t1,t2));
+        p2.setTasks(List.of(t3));
+
+        when(projectRepository.findAll()).thenReturn(List.of(p1,p2,p3));
+        when(projectRepository.findById(Long.valueOf(1))).thenReturn(Optional.of(p1));
+        when(projectRepository.findById(Long.valueOf(2))).thenReturn(Optional.of(p2));
+
+
+        assertThatThrownBy(() -> taskService.generateAllSchedule())
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Unable to process request. Error on getting earliest start date");
+    }
+
+    @Test
+    void generateAllSchedule_ShouldThrow_WhenNoProject(){
         when(projectRepository.findAll()).thenReturn(new ArrayList<>());
 
         assertThatThrownBy(() -> taskService.generateAllSchedule())

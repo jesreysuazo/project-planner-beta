@@ -202,15 +202,18 @@ public class TaskService {
      * @return true if circular dependency is detected, false if none is detected
      */
     private boolean isDependentOn(Task current, Long targetId, Set<Long> visited){
-
         log.fine("Checking task dependency ID=" + current.getId() + "for potential dependency looping. IDS visited: " + visited);
+
         if(current.getId().equals(targetId)){
             return true;
         }
+
+        // prevent infinite recursion.
         if(visited.contains(current.getId())){
             log.fine("no circular dependency detected");
             return false;
         }
+
         visited.add(current.getId());
 
 
@@ -267,6 +270,7 @@ public class TaskService {
         taskRepository.saveAll(sortedTasks);
         LocalDate minStart = sortedTasks.stream()
                 .map(Task::getStartDate)
+                .filter(Objects::nonNull)
                 .min(LocalDate::compareTo)
                 .orElseThrow(() -> {
                     log.warning("Error on getting earliest start date");
@@ -275,6 +279,7 @@ public class TaskService {
 
         LocalDate maxEnd = sortedTasks.stream()
                 .map(Task::getEndDate)
+                .filter(Objects::nonNull)
                 .max(LocalDate::compareTo)
                 .orElseThrow(() -> {
                     log.severe("Error on getting latest end date");
@@ -388,10 +393,11 @@ public class TaskService {
             log.warning("End date cannot be before start date");
             throw new BadRequestException("Unable to process request. Invalid dates.");
         }
-        if (start.isAfter(end)) {
-            log.warning("Start date cannot be after end date");
-            throw new BadRequestException("Unable to process request. Invalid dates.");
-        }
+        // redundant
+        //if (start.isAfter(end)) {
+        //    log.warning("Start date cannot be after end date");
+        //    throw new BadRequestException("Unable to process request. Invalid dates.");
+        //}
     }
 
     /**
@@ -402,6 +408,7 @@ public class TaskService {
         LocalDate parentStart = task.getStartDate().minusDays(1);
         LocalDate dependencyEnd = task.getDependencies().stream()
                 .map(Task::getEndDate)
+                .filter(Objects::nonNull)
                 .max(LocalDate::compareTo)
                 .orElseThrow(() -> {
                     log.warning("Error on getting latest end date");
