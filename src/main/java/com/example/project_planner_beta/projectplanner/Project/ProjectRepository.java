@@ -1,4 +1,4 @@
-package com.example.project_planner_beta.projectplanner;
+package com.example.project_planner_beta.projectplanner.Project;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

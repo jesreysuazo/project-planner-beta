@@ -1,6 +1,7 @@
-package com.example.project_planner_beta.projectplanner;
+package com.example.project_planner_beta.projectplanner.Project;
 
 // import lombok.Data;
+import com.example.project_planner_beta.projectplanner.Task.Task;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -33,5 +34,5 @@ public class Project {
     public void setCode(String code) {this.code = code;}
 
     public List<Task> getTasks() {return tasks;}
-    public void setTasks(List<Task> task) {this.tasks = tasks;}
+    public void setTasks(List<Task> tasks) {this.tasks = tasks;}
 }

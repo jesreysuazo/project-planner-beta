@@ -1,4 +1,6 @@
-package com.example.project_planner_beta.projectplanner.dto;
+package com.example.project_planner_beta.projectplanner.Project.dto;
+
+import com.example.project_planner_beta.projectplanner.Task.dto.TaskDTO;
 
 import java.util.List;
 

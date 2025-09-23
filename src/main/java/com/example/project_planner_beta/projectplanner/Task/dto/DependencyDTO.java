@@ -1,4 +1,4 @@
-package com.example.project_planner_beta.projectplanner.dto;
+package com.example.project_planner_beta.projectplanner.Task.dto;
 
 public class DependencyDTO {
     private Long id;

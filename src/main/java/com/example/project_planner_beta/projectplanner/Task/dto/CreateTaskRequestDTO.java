@@ -1,4 +1,4 @@
-package com.example.project_planner_beta.projectplanner.dto;
+package com.example.project_planner_beta.projectplanner.Task.dto;
 
 import java.time.LocalDate;
 import java.util.List;

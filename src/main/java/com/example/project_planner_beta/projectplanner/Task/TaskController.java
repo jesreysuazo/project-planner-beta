@@ -1,19 +1,22 @@
-package com.example.project_planner_beta.projectplanner;
+package com.example.project_planner_beta.projectplanner.Task;
 
-import com.example.project_planner_beta.common.BadRequestException;
-import com.example.project_planner_beta.projectplanner.dto.CreateTaskRequestDTO;
-import com.example.project_planner_beta.projectplanner.dto.TaskDTO;
-import com.example.project_planner_beta.projectplanner.dto.UpdateTaskRequestDTO;
-import com.example.project_planner_beta.projectplanner.tools.TaskMapper;
+import com.example.project_planner_beta.exception.NotFoundException;
+import com.example.project_planner_beta.projectplanner.Task.dto.CreateTaskRequestDTO;
+import com.example.project_planner_beta.projectplanner.Task.dto.TaskDTO;
+import com.example.project_planner_beta.projectplanner.Task.dto.UpdateTaskRequestDTO;
+import com.example.project_planner_beta.projectplanner.Task.tools.TaskMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.*;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
+    private static final Logger log = Logger.getLogger(TaskController.class.getName());
 
     @Autowired
     private TaskService taskService;
@@ -65,8 +68,8 @@ public class TaskController {
 
 
         Task createdTask = taskService.createTask(task);
-
-        return ResponseEntity.ok(TaskMapper.toDTO(createdTask));
+        URI location = URI.create("/tasks/" + createdTask.getId());
+        return ResponseEntity.created(location).body(TaskMapper.toDTO(createdTask));
     }
 
     /**
@@ -84,7 +87,10 @@ public class TaskController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TaskDTO> updateTask(@PathVariable Long id,@RequestBody UpdateTaskRequestDTO updatedTask){
-        Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> new BadRequestException("Update failed. Invalid ID provided"));
+        Task oldRecord = taskService.getTaskDetails(id).orElseThrow(() -> {
+            log.severe("Update failed. Invalid ID provided");
+            return new NotFoundException("Update failed. Invalid ID provided");
+        });
 
         Task savedtask = new Task();
 
@@ -118,7 +124,10 @@ public class TaskController {
     @GetMapping("/{id}")
     public TaskDTO getTaskById(@PathVariable Long id){
         Task task = taskService.getTaskDetails(id)
-                .orElseThrow(() -> new BadRequestException("Cannot find task"));
+                .orElseThrow(() -> {
+                    log.severe("Cannot find task");
+                    return new RuntimeException("Cannot find task");
+                });
 
         return TaskMapper.toDTO(task);
     }
@@ -133,6 +142,7 @@ public class TaskController {
     public ResponseEntity<Void> deleteTask(@PathVariable Long id){
         Optional<Task> task = taskService.getTaskDetails(id);
         if (task.isEmpty()){
+            log.severe("Invalid ID provided. Deleting failed");
             return ResponseEntity.notFound().build();
         }
         taskService.deleteTaskById(id);

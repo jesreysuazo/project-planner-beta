@@ -1,6 +1,7 @@
-package com.example.project_planner_beta.projectplanner;
+package com.example.project_planner_beta.projectplanner.Project;
 
-import com.example.project_planner_beta.common.BadRequestException;
+import com.example.project_planner_beta.exception.NotFoundException;
+import com.example.project_planner_beta.projectplanner.Task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,7 @@ public class ProjectService {
             code = builder.toString();
         } while (projectRepository.findByCode(code) != null);
 
-        log.info("Generated code: " + code);
+        log.fine("Generated code: " + code);
         return code;
     }
 
@@ -59,7 +60,7 @@ public class ProjectService {
      */
     public List<Project> getAllProjects() {
         List<Project> projectList = projectRepository.findAll();
-        log.info("Retrieved " + projectList.size() + " projects");
+        log.fine("Retrieved " + projectList.size() + " projects");
         return projectList;
     }
 
@@ -78,25 +79,13 @@ public class ProjectService {
      * @param id project id
      */
     public void deleteProject(Long id) {
-        log.info("Deleting Project ID: "+ id);
-        Project project = projectRepository.findById(id).orElseThrow(() -> new BadRequestException("Project not found."));
+        log.fine("Deleting Project ID: "+ id);
+        Project project = projectRepository.findById(id).orElseThrow(() -> {
+            log.severe("Project not found with ID= " + id);
+            return new NotFoundException("Project not found with ID= " + id);
+        });
         projectRepository.deleteById(project.getId());
+        log.info("Project with ID: " + id + " is deleted");
     }
 
-    /**
-     * Gets all tasks under the project
-     *
-     * @param code 6 digit project code
-     * @return list of tasks under the project
-     */
-    public List<Task> getTaskByCode(String code) {
-        Project project = projectRepository.findByCode(code);
-        if (project == null) {
-            return Collections.emptyList();
-        }
-
-        List<Task> tasks = project.getTasks();
-        log.info("Retrieved " + tasks.size() + " tasks");
-        return tasks != null ? tasks : Collections.emptyList();
-    }
 }

@@ -1,8 +1,11 @@
-package com.example.project_planner_beta.projectplanner;
+package com.example.project_planner_beta.projectplanner.Task;
 
-import com.example.project_planner_beta.common.BadRequestException;
-import com.example.project_planner_beta.projectplanner.dto.ProjectScheduleDTO;
-import com.example.project_planner_beta.projectplanner.tools.TaskMapper;
+import com.example.project_planner_beta.exception.BadRequestException;
+import com.example.project_planner_beta.exception.NotFoundException;
+import com.example.project_planner_beta.projectplanner.Project.Project;
+import com.example.project_planner_beta.projectplanner.Project.ProjectRepository;
+import com.example.project_planner_beta.projectplanner.Project.dto.ProjectScheduleDTO;
+import com.example.project_planner_beta.projectplanner.Task.tools.TaskMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
@@ -23,18 +27,18 @@ public class TaskService {
      *
      * @param task The task to be created
      * @return The saved task with generated ID
-     * @throws BadRequestException if the project does not exist, dates are invalid,
+     * @throws Exception if the project does not exist, dates are invalid,
      *                              or dependencies belong to a different project or create circular dependency.
      */
     @Transactional
     public Task createTask(Task task) {
 
-        log.info("Creating new task: name:" + task.getName() + ", projectCode: " + task.getProjectCode());
+        log.fine("Creating new task: name:" + task.getName() + ", projectCode: " + task.getProjectCode());
 
         Project project = projectRepository.findByCode(task.getProjectCode());
         if (project == null) {
-            log.info("Failed to create task. Project with code "+ task.getProjectCode() +" does not exist");
-            throw new BadRequestException("Project with code " + task.getProjectCode() + " does not exist");
+            log.log(Level.SEVERE,"Failed to create task. Project with code "+ task.getProjectCode() +" does not exist");
+            throw new NotFoundException("Project not found with code: " + task.getProjectCode());
         }
 
         validateDates(task.getStartDate(), task.getEndDate());
@@ -51,22 +55,22 @@ public class TaskService {
             // check if start date of task is after the end date of task dependencies
             validateDependencyDates(task);
 
-            log.info("Validating " + savedTask.getDependencies().size() + " task dependencies for task ID= " + savedTask.getId());
+            log.fine("Validating " + savedTask.getDependencies().size() + " task dependencies for task ID= " + savedTask.getId());
 
             Set<Task> dependencies = savedTask.getDependencies();
             for (Task dep: dependencies){
                 if (!task.getProjectCode().equals(dep.getProjectCode())) {
-                    log.info("Failed to add task dependencies. Project code does not match " + dep.getProjectCode() +" : " + task.getProjectCode() );
-                    throw new BadRequestException("All dependencies must belong to the same project");
+                    log.warning("Failed to add task dependencies. Project code does not match: expected= " + task.getProjectCode() +" , found= " + dep.getProjectCode() );
+                    throw new BadRequestException("Unable to process request. All dependencies must belong to the same project.");
                 }
                 if (willLoop(task, dep)) {
-                    log.info("This action will result in a circular dependency");
-                    throw new BadRequestException("This action will result in a circular dependency");
+                    log.warning("This action will result in a circular dependency");
+                    throw new BadRequestException("Unable to process request. Circular dependency detected.");
                 }
             }
         }
 
-        log.info("Task saved with ID= " + savedTask.getId());
+        log.info("Task successfully created with ID= " + savedTask.getId());
         return savedTask;
     }
 
@@ -76,24 +80,24 @@ public class TaskService {
      * @param taskId The id of the task to be updated
      * @param updatedTask New task data
      * @return The updated and saved task
-     * @throws BadRequestException if the task does not exist
+     * @throws RuntimeException if the task does not exist
      *                              invalid dates
      *                              circular dependencies are detected
      */
     @Transactional
     public Task updateTask(Long taskId, Task updatedTask) {
 
-        log.info("Updating task ID= " + taskId);
+        log.fine("Updating task ID= " + taskId);
         Task existingRecord = taskRepository.findById(taskId)
                 .orElseThrow(() -> {
-                    log.info("Task with ID= "+ taskId +" not found");
-                    return new BadRequestException("Task not found");
+                    log.severe("Task with ID= "+ taskId +" not found");
+                    return new NotFoundException("Unable to process request. Task not found with ID= " + taskId);
                 });
 
         //check if same project code
         if(!Objects.equals(updatedTask.getProjectCode(), existingRecord.getProjectCode())){
-            log.info("Cannot change project code");
-            throw new BadRequestException("Cannot change project code");
+            log.warning("Cannot change project code");
+            throw new BadRequestException("Unable to process request. Cannot change project code");
         }
 
         // check if dependency is DONE
@@ -102,8 +106,8 @@ public class TaskService {
                 for(Task dep: existingRecord.getDependencies()){
 
                     if(dep.getStatus() == TaskStatus.NOT_STARTED || dep.getStatus() == TaskStatus.IN_PROGRESS){
-                        log.info("Cannot start task until dependencies are DONE");
-                        throw new BadRequestException("Cannot start task until dependencies are DONE");
+                        log.warning("Attempt to start task before dependencies are completed. Task ID " + taskId);
+                        throw new BadRequestException("Unable to process request. Dependencies must be completed first");
                     }
 
                 }
@@ -126,12 +130,12 @@ public class TaskService {
             for (Task dep : updatedTask.getDependencies()) {
 
                 if (!updatedTask.getProjectCode().equals(dep.getProjectCode())) {
-                    log.info("All dependencies must belong to the same project");
-                    throw new BadRequestException("All dependencies must belong to the same project");
+                    log.warning("Dependency project mismatch on update: expected= " + updatedTask.getProjectCode() + " , found= " + dep.getProjectCode());
+                    throw new BadRequestException("Unable to process request. All dependencies must belong to the same project.");
                 }
                 if (willLoop(existingRecord, dep)) {
-                    log.info("This action will result in a circular dependency");
-                    throw new BadRequestException("This action will result in a circular dependency");
+                    log.warning("This action will result in a circular dependency");
+                    throw new BadRequestException("Unable to process request. Circular dependency detected.");
                 }
             }
 
@@ -198,26 +202,29 @@ public class TaskService {
      * @return true if circular dependency is detected, false if none is detected
      */
     private boolean isDependentOn(Task current, Long targetId, Set<Long> visited){
+        log.fine("Checking task dependency ID=" + current.getId() + "for potential dependency looping. IDS visited: " + visited);
 
-        log.info("Checking task dependency ID=" + current.getId() + "for potential dependency looping. IDS visited: " + visited);
         if(current.getId().equals(targetId)){
             return true;
         }
+
+        // prevent infinite recursion.
         if(visited.contains(current.getId())){
-            log.info("no circular dependency detected");
+            log.fine("no circular dependency detected");
             return false;
         }
+
         visited.add(current.getId());
 
 
         for (Task dep : current.getDependencies()){
             if(isDependentOn(dep, targetId, visited)){
-                log.info("circular dependency detected");
+                log.warning("circular dependency detected");
                 return true;
             }
         }
 
-        log.info("no circular dependency detected");
+        log.fine("no circular dependency detected");
         return false;
     }
 
@@ -230,14 +237,14 @@ public class TaskService {
     @Transactional
     public ProjectScheduleDTO generateSchedule(Long projectId){
         Project project = projectRepository.findById(projectId).orElseThrow(() -> {
-            log.info("Cannot find project with ID: " + projectId);
-            return new BadRequestException("Cannot find project with ID: " + projectId);
+            log.severe("Cannot find project with ID: " + projectId);
+            return new NotFoundException("Project not found with ID=" + projectId);
         });
 
         List<Task> tasks = project.getTasks();
         if(tasks == null || tasks.isEmpty()){
-            log.info("Project with ID: " + projectId + " has no tasks. Cannot generate a schedule");
-            throw new BadRequestException("Project with ID: " + projectId + " has no tasks. Cannot generate a schedule");
+            log.warning("Project with ID: " + projectId + " has no tasks. Cannot generate a schedule");
+            throw new NotFoundException("Unable to process request. Project has no tasks.");
         }
 
         List<Task> sortedTasks = sortTask(tasks);
@@ -263,18 +270,20 @@ public class TaskService {
         taskRepository.saveAll(sortedTasks);
         LocalDate minStart = sortedTasks.stream()
                 .map(Task::getStartDate)
+                .filter(Objects::nonNull)
                 .min(LocalDate::compareTo)
                 .orElseThrow(() -> {
-                    log.info("Error on getting earliest start date");
-                    return new BadRequestException("Error on getting earliest start date");
+                    log.warning("Error on getting earliest start date");
+                    return new BadRequestException("Unable to process request. Error on getting earliest start date");
                 });
 
         LocalDate maxEnd = sortedTasks.stream()
                 .map(Task::getEndDate)
+                .filter(Objects::nonNull)
                 .max(LocalDate::compareTo)
                 .orElseThrow(() -> {
-                    log.info("Error on getting latest end date");
-                    return new BadRequestException("Error on getting latest end date");
+                    log.severe("Error on getting latest end date");
+                    return new BadRequestException("Unable to process request. Error on getting latest end date");
                 });
 
         long totalDays = ChronoUnit.DAYS.between(minStart, maxEnd) + 1;
@@ -302,7 +311,8 @@ public class TaskService {
     public List<ProjectScheduleDTO> generateAllSchedule(){
         List<Project> projects = projectRepository.findAll();
         if(projects == null || projects.isEmpty()){
-            throw new BadRequestException("No projects found");
+            log.severe("No projects found");
+            throw new NotFoundException("Unable to process request. No projects found");
         }
 
         List<ProjectScheduleDTO> allSchedules = new ArrayList<>();
@@ -378,15 +388,16 @@ public class TaskService {
      * @param end end date (YYYY-MM-DD)
      */
     private void validateDates(LocalDate start, LocalDate end) {
-        log.info("Validating dates: start=" + start + ", end=" + end );
+        log.fine("Validating dates: start=" + start + ", end=" + end );
         if (end.isBefore(start)) {
-            log.info("End date cannot be before start date");
-            throw new BadRequestException("End date cannot be before start date");
+            log.warning("End date cannot be before start date");
+            throw new BadRequestException("Unable to process request. Invalid dates.");
         }
-        if (start.isAfter(end)) {
-            log.info("Start date cannot be after end date");
-            throw new BadRequestException("Start date cannot be after end date");
-        }
+        // redundant
+        //if (start.isAfter(end)) {
+        //    log.warning("Start date cannot be after end date");
+        //    throw new BadRequestException("Unable to process request. Invalid dates.");
+        //}
     }
 
     /**
@@ -397,15 +408,16 @@ public class TaskService {
         LocalDate parentStart = task.getStartDate().minusDays(1);
         LocalDate dependencyEnd = task.getDependencies().stream()
                 .map(Task::getEndDate)
+                .filter(Objects::nonNull)
                 .max(LocalDate::compareTo)
                 .orElseThrow(() -> {
-                    log.info("Error on getting latest end date");
-                    return new BadRequestException("Error on getting latest end date");
+                    log.warning("Error on getting latest end date");
+                    return new RuntimeException("Error on getting latest end date");
                 });
 
         if(parentStart.isBefore(dependencyEnd)){
-            log.info("Cannot add dependency. Cannot set start date before the dependency task's end date.");
-            throw new BadRequestException("Cannot add dependency. Cannot set start date before the dependency task's end date.");
+            log.warning("Cannot add dependency. Cannot set start date before the dependency task's end date.");
+            throw new RuntimeException("Unable to process request. Cannot set start date before the dependency task's end date.");
         }
     }
 
@@ -415,7 +427,10 @@ public class TaskService {
      */
     public void dependencyIdChecker (Set<Long> dependency){
         for(Long id: dependency){
-            getTaskDetails(id).orElseThrow(() -> new BadRequestException("Cannot add dependency. ID=" + id + " is invalid"));
+            getTaskDetails(id).orElseThrow(() -> {
+                log.severe("Cannot add dependency. ID=" + id + " is invalid");
+                return new NotFoundException("Unable to process request. Invalid dependency ID=" + id);
+            });
         }
     }
 

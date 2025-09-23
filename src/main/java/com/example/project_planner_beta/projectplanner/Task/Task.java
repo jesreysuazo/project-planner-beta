@@ -1,6 +1,7 @@
-package com.example.project_planner_beta.projectplanner;
+package com.example.project_planner_beta.projectplanner.Task;
 
 // import lombok.Data;
+import com.example.project_planner_beta.projectplanner.Project.Project;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

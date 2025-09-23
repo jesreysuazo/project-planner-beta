@@ -1,7 +1,8 @@
-package com.example.project_planner_beta.projectplanner.tools;
+package com.example.project_planner_beta.projectplanner.Project.tools;
 
-import com.example.project_planner_beta.projectplanner.Project;
-import com.example.project_planner_beta.projectplanner.dto.ProjectDTO;
+import com.example.project_planner_beta.projectplanner.Project.Project;
+import com.example.project_planner_beta.projectplanner.Project.dto.ProjectDTO;
+import com.example.project_planner_beta.projectplanner.Task.tools.TaskMapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
