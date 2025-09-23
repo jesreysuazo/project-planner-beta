@@ -31,6 +31,7 @@ A full-stack project scheduling app built with **Spring Boot** and **Angular**. 
 ### Backend (Spring Boot)
 
 ```bash
+cd backend
 ./mvnw clean install
 ./mvnw spring-boot:run
 ```
@@ -39,7 +40,7 @@ Access H2 Console: http://localhost:8080/h2-console
 
 ### Frontend (Angular)
 ```bash
-cd frontend  # or wherever your Angular app is located
+cd frontend
 npm install
 ng serve
 ```
