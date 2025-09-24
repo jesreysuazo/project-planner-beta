@@ -1,1 +1,16 @@
-<p>project-list works!</p>
+<header>
+    <h1>Project List</h1>
+    <button><mat-icon aria-hidden="false" aria-label="add button" fontIcon="add_circle"></mat-icon>Add project</button>
+</header>
+
+
+<div class="project-container">
+    @for (item of projects; track item.id) {
+    <a [routerLink]="['/project', item.code]" class="card-project">
+        <p>{{item.name}}</p>
+        <p>{{item.code}}</p>
+    </a>
+    } @empty {
+    <div>No items found.</div>
+    }
+</div>

@@ -1,0 +1,28 @@
+.app{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.app-container{
+
+    max-width: 1100px;
+    width: 100%;
+}
+
+.mobile{
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+@media (max-width: 750px) {
+    .mobile{
+        display: flex;
+    }
+    .app{
+        display: none;
+    }
+}

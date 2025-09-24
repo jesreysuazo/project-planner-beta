@@ -1,0 +1,49 @@
+.dnd-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    gap: 2rem;
+}
+
+.example-box{
+    height: 100px;
+    width: 100%;
+    padding: 1rem;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.example-list{
+    min-height: 500px;
+    background-color:whitesmoke;
+    border: 1px solid gray;
+    width: 100%;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dnd-tab{
+    width: 100%;
+}
+
+.card-id{
+    font-size: 0.8rem;
+}
+
+.card-action-sec{
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.card-header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}

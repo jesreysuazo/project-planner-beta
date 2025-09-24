@@ -1,1 +1,61 @@
-<p>task-list works!</p>
+<a [routerLink]="['/']"> <mat-icon aria-hidden="false" aria-label="add button" fontIcon="chevron_left"></mat-icon> Back
+    to Project List</a>
+<header>
+    <h1>Task List</h1>
+    <button><mat-icon aria-hidden="false" aria-label="add button" fontIcon="add_circle"></mat-icon>Add Task</button>
+</header>
+<div class="dnd-container">
+    @for (column of columns; track column.name) {
+    <div class="dnd-tab">
+        <h2>{{ column.name }}</h2>
+        <div cdkDropList #dropList="cdkDropList" [cdkDropListData]="column.data"
+            [cdkDropListConnectedTo]="column.connectedTo" class="example-list" (cdkDropListDropped)="drop($event)">
+            @for (item of column.data; track item.id) {
+            <div class="example-box" cdkDrag>
+                <span class="card-header">
+                    <p class="card-id">ID: {{ item.id }}</p>
+                    <span class="card-action-sec">
+                        <button (click)="openDialog(item)">✏️</button>
+                        <button>❌</button>
+                    </span>
+                </span>
+                <span>
+                    <h4>{{ item.name }}</h4>
+                </span>
+            </div>
+            }
+        </div>
+    </div>
+    }
+</div>
+
+
+
+
+<!-- table -->
+<!-- <div>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of tasks; track item.id) {
+        <tr>
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>✏️</td>
+          <td>❌</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4">No items found.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div> -->

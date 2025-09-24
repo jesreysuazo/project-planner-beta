@@ -1,21 +1,24 @@
-import { Injectable } from "@angular/core";
+import { inject } from '@angular/core';
+
 import {
     HttpErrorResponse,
-    HttpEvent,
-    HttpHandler,
-    HttpInterceptor,
+    HttpHandlerFn,
     HttpRequest,
 } from "@angular/common/http";
-import { catchError, throwError, Observable } from "rxjs";
+import { catchError, throwError } from "rxjs";
+import { Router } from '@angular/router';
 
-@Injectable()
-export class ErrorInterceptor implements HttpInterceptor {
-    intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        return next.handle(req).pipe(
-            catchError((error: HttpErrorResponse) => {
-                console.error('API Error: ', error.message);
-                return throwError(() => error);
-            })
-        )
-    }
+export function errorInterceptor(req:HttpRequest<unknown>, next:HttpHandlerFn){
+    const router = inject(Router);
+    const caller = req.headers.get('X-caller');
+    
+    return next(req).pipe(
+        catchError((error:HttpErrorResponse)=>{
+            alert('Error: ' + error.error.message);
+            // router.navigate(['/']);
+
+ 
+            return throwError(() => error)
+        })
+    )
 }
